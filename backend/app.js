@@ -69,6 +69,17 @@ const mobileResetPasswordConfirmation = 'cloudland.reset.password://sample.com';
 
 let resetPasswordCodesMap = new Map();
 
+let appIDCreds = process.env["APPID_CREDS"]
+if (process.env["VCAP_SERVICES"] === undefined && appIDCreds != "") {
+    //If we have the APPID service creds compose VCAP
+    let vcap = {
+        "AppID": [{
+            "credentials": JSON.parse(appIDCreds || "{}"),
+        }]
+    }
+    process.env["VCAP_SERVICES"] = JSON.stringify(vcap)
+}
+
 app.use(helmet());
 app.use(flash());
 app.set('view engine', 'ejs'); // set up ejs for templating
@@ -98,7 +109,8 @@ app.use(bodyParser.json());
 passport.use(new WebAppStrategy());
 
 let selfServiceManager = new SelfServiceManager({
-    iamApiKey: process.env.IAM_API_KEY || credentials.iamApiKey
+    iamApiKey: process.env.IAM_API_KEY || credentials.iamApiKey,
+    iamTokenUrl: process.env.IAM_TOKEN_URL || "https://iam.stage1.ng.bluemix.net/oidc/token"
 });
 
 // Configure passportjs with user serialization/deserialization. This is required
